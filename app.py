@@ -199,7 +199,7 @@ def registry(data):
         else:
             return "esta wea se rompio"
     if request.method=='GET':
-        return "favor solo usar esto solo para el registro de datos"
+        return "enserio estas tratando de ver weas en donde teni que meterle?"
 
 if __name__ == "__main__":
     app.run(
