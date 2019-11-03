@@ -1,7 +1,6 @@
 from flask import Flask, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import check_password_hash, generate_password_hash
-from flask_migrate import Migrate
 
 
 app=Flask(__name__)
@@ -10,9 +9,9 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS']=False
 app.config['SQLALCHEMY_ECHO']=True
 app.config['SQLALCHEMY_RECORD_QUERIES']=True
 db=SQLAlchemy(app)
-migrate=Migrate(app, db)
 
-# ACA COMIENZA EL MODELO
+
+
 class User(db.Model):
     id = db.Column(db.Integer, primary_key= True)
     username = db.Column(db.String(20), nullable =False)
