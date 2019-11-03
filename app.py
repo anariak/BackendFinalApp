@@ -6,6 +6,8 @@ from werkzeug.security import check_password_hash, generate_password_hash
 app=Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI']='sqlite:///db/db.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS']=False
+app.config['SQLALCHEMY_ECHO']=True
+app.config['SQLALCHEMY_RECORD_QUERIES']=True
 db=SQLAlchemy(app)
 
 # ACA COMIENZA EL MODELO
