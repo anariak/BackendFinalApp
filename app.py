@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, Response, render_template, make_response
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import check_password_hash, generate_password_hash
 from flask_migrate import Migrate
@@ -167,6 +167,7 @@ def index():
 def registry():
     if request.method =='POST':
         data = request.get_json()
+        print(data)
         hashed_pw = generate_password_hash(data["password"], method='sha256')
         new_user = User(
             username=data["username"],
@@ -177,7 +178,7 @@ def registry():
         )
         new_profile = Profile(
             name=data["name"],
-            lastname=["lastname"],
+            lastname=data["lastname"],
             rut=data["rut"]
         )
         new_rol = Rol(
@@ -202,22 +203,35 @@ def registry():
         else:
             return "esta wea se rompio"
     if request.method=='GET':
-<<<<<<< HEAD
-        return "enserio estas tratando de ver weas en donde teni que meterle?"
-
-=======
         return "favor solo usar esto solo para el registro de datos"
 @app.route('/login')
 def signup():
     if request.method =='POST':
         login = request.get_json()
-        user = User.query.filter_by(user=login["username"]).first()
+        user = User.query.filter_by(username=login["username"]).first()
         if user and check_password_hash(login["password"], user.password):
             return True
         else:
             "ingresa la wea bien"
+
+@app.route('/addtask', methods=['POST'])
+def addTastk():
+    pass
+
+@app.route('/task/<string:category>', methods=['GET'])
+def subcategory(category):
+    if request.methods=='GET':
+        category = Category.query.filter_by(name = category)
+        getid = category.id
+        getTask = Task.query.filter_by(category_id = getid, status = 'Disponible').all()
+        return getTask.jsonify()
     
->>>>>>> testing
+@app.errorhandler(404)
+def not_found(error):
+    resp = make_response(render_template('error.html'), 404)
+    return resp
+
+
 if __name__ == "__main__":
     db.create_all()
     app.run(
