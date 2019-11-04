@@ -1,7 +1,7 @@
 from flask import Flask, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import check_password_hash, generate_password_hash
-
+from flask_migrate import Migrate
 
 app=Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI']='sqlite:///db/db.db'
@@ -9,6 +9,8 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS']=False
 app.config['SQLALCHEMY_ECHO']=True
 app.config['SQLALCHEMY_RECORD_QUERIES']=True
 db=SQLAlchemy(app)
+migrate = Migrate(app, db)
+
 
 # ACA COMIENZA EL MODELO
 class User(db.Model):
@@ -17,7 +19,7 @@ class User(db.Model):
     password = db.Column(db.String(20), nullable =False)
     mail = db.Column(db.String(20), nullable = False)
     phone = db.Column(db.Integer, nullable = False)
-    image = db.Column(db.LargeBinary, nullable = False)
+    image = db.Column(db.LargeBinary, nullable = True)
 
     #Relationship
     profile_id= db.Column(db.Integer, db.ForeignKey('profile.id'), nullable=False)
@@ -26,7 +28,7 @@ class User(db.Model):
     rol_id = db.Column(db.Integer, db.ForeignKey('rol.id'), nullable=False)
     rol = db.relationship('Rol', backref = db.backref('rol', lazy=True))
     def __repr__(self):
-        return '<User %r>' % self.username
+        return '<User %r>' % self.username, self.password, self.mail, self.phone, self.image, self.profile_id, self.rol_id
     
     def serialize(self):
         return {
@@ -45,7 +47,7 @@ class Profile(db.Model):
     rut = db.Column(db.String(15), nullable = False)
 
     def __repr__(self):
-        return '<Profile %r>' % self.name
+        return '<Profile %r>' % self.name, self.lastname, self.rut
     
     def serialize(self):
         return {
@@ -75,7 +77,7 @@ class Task(db.Model):
     price = db.Column(db.Float, nullable = False)
     category_id = db.Column(db.Integer, db.ForeignKey('category.id'), nullable=False)
     region_id = db.Column(db.Integer, db.ForeignKey('region.id'), nullable=False)
-    Comunne_id = db.Column(db.Integer, db.ForeignKey('comunne.id'), nullable=False)
+    comunne_id = db.Column(db.Integer, db.ForeignKey('comunne.id'), nullable=False)
     code = db.Column(db.String(10), nullable = False, unique = True)
     status = db.Column(db.String(10), nullable=False)
     # Outside Columns
@@ -84,7 +86,7 @@ class Task(db.Model):
     category = db.relationship('Category', backref = db.backref('category', lazy=True))
 
     def __repr__(self):
-        return '<Task %r>' % self.title
+        return '<Task %r>' % self.title, self.commentary, self.date, self.price, self.category_id, self.region_id, self.comunne_id, self.code, self.status
     def serialize(self):
         return{
             "title": self.id,
@@ -147,7 +149,7 @@ class Request(db.Model):
     user = db.relationship('User', backref= db.backref('user', lazy=True))
 
     def __repr__(self):
-        return '<Request %r>' % self.task_id
+        return '<Request %r>' % self.task_id, self.user_id, self.commentary, self.status
 
     def serialize(self):
         return {
@@ -161,10 +163,10 @@ def index():
     return jsonify("holi")
 
 @app.route('/registro', methods=['GET','POST'])
-def registry(data):
-    if request.methods =='POST':
+def registry():
+    if request.method =='POST':
         data = request.get_json()
-        hashed_pw = generate_password_hash(data["password"], method='hash256')
+        hashed_pw = generate_password_hash(data["password"], method='sha256')
         new_user = User(
             username=data["username"],
             password=hashed_pw,
@@ -200,8 +202,18 @@ def registry(data):
             return "esta wea se rompio"
     if request.method=='GET':
         return "favor solo usar esto solo para el registro de datos"
-
+@app.route('/login')
+def signup():
+    if request.method =='POST':
+        login = request.get_json()
+        user = User.query.filter_by(user=login["username"]).first()
+        if user and check_password_hash(login["password"], user.password):
+            return True
+        else:
+            "ingresa la wea bien"
+    
 if __name__ == "__main__":
+    db.create_all()
     app.run(
         host = 'localhost',
         port=5000,
